@@ -190,7 +190,7 @@ void glyph::_calculate_weight()
 {
 	for (unsigned char i : _data)
 	{
-		_weight_all += i;
+		_weight += i;
 	}
 }
 
@@ -202,22 +202,6 @@ unsigned char glyph::get_point(unsigned int x, unsigned int y)
 void glyph::set_point(unsigned int x, unsigned int y)
 {
 	_data[y * _width + x] = 1;
-}
-
-bool glyph::match(const font_pattern &pattern)
-{
-	// check and generate _weight
-	if (_weight_all == 0)
-	{
-		_calculate_weight();
-	}
-
-	if (abs(pattern.weight() - _weight_all) > WEIGHT_THREASHOLD)
-	{
-		return false;
-	}
-
-	return true;
 }
 
 bool glyph::save_bmp(const string &filename)
@@ -239,6 +223,26 @@ bool glyph::save_bmp(const string &filename)
 
 	return true;
 }
+
+// font_pattern
+bool font_pattern::match(const glyph &glyph)
+{
+	// check and generate _weight
+	/*
+	if (_weight == 0)
+	{
+		_calculate_weight();
+	}
+
+	if (abs(glyph.weight() - _weight) > WEIGHT_THREASHOLD)
+	{
+		return false;
+	}
+	*/
+
+	return true;
+}
+
 
 // class hoku_screenshot
 hoku_screenshot::~hoku_screenshot()

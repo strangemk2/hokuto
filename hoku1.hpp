@@ -87,30 +87,12 @@ class bmp : public picture
 		rgb get_pixel(unsigned int x, unsigned int y);
 };
 
-class font_pattern
-{
-	private:
-		unsigned char _ch = 0;
-		unsigned int _weight = 0;
-
-	public:
-		unsigned int weight() const
-		{
-			return _weight;
-		}
-
-		unsigned char charactor() const
-		{
-			return _ch;
-		}
-};
-
 class glyph
 {
 	private:
 		constexpr static unsigned int WEIGHT_THREASHOLD = 5;
 
-		unsigned int _weight_all = 0;
+		unsigned int _weight;
 
 		unsigned int _width;
 		unsigned int _height;
@@ -131,13 +113,26 @@ class glyph
 
 		operator bool() const
 		{
-			return _weight_all;
+			return _weight;
 		}
 
 		void set_point(unsigned int x, unsigned int y);
-		bool match(const font_pattern &pattern);
 
 		bool save_bmp(const string &filename);
+};
+
+class font_pattern : public glyph
+{
+	private:
+		unsigned char _ch = 0;
+
+	public:
+		unsigned char charactor() const
+		{
+			return _ch;
+		}
+
+		bool match(const glyph &pattern);
 };
 
 vector<font_pattern> glyph_patterns;
