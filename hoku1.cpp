@@ -90,19 +90,19 @@ png::~png()
 {
 	if (_fp) fclose(_fp);
 	if (_png_ptr && _info_ptr)
-		png_destroy_read_struct(&_png_ptr, &_info_ptr, png_infopp_NULL);
+		png_destroy_read_struct(&_png_ptr, &_info_ptr, NULL);
 	if (_png_ptr && !_info_ptr)
-		png_destroy_read_struct(&_png_ptr, png_infopp_NULL, png_infopp_NULL);
+		png_destroy_read_struct(&_png_ptr, NULL, NULL);
 }
 
 unsigned int png::height()
 {
-	return _info_ptr->height;
+	return png_get_image_height(_png_ptr, _info_ptr);
 }
 
 unsigned int png::width()
 {
-	return _info_ptr->width;
+	return png_get_image_width(_png_ptr, _info_ptr);
 }
 
 bool png::init(const string filename)
@@ -128,10 +128,10 @@ bool png::init(const string filename)
 
 	png_set_sig_bytes(_png_ptr, sig_read);
 
-	png_read_png(_png_ptr, _info_ptr, PNG_TRANSFORM_STRIP_ALPHA, png_voidp_NULL);
+	png_read_png(_png_ptr, _info_ptr, PNG_TRANSFORM_STRIP_ALPHA, NULL);
 
-	int color_type = _info_ptr->color_type;  
-	int bit_depth = _info_ptr->pixel_depth;  
+	int color_type = png_get_color_type(_png_ptr, _info_ptr);
+	int bit_depth = png_get_bit_depth(_png_ptr, _info_ptr);
 	if (color_type != 2 || bit_depth != 24)
 		return false;
 
@@ -212,7 +212,7 @@ bool glyph::match(const font_pattern &pattern)
 		_calculate_weight();
 	}
 
-	if (abs(pattern.weight() - _weight_all) > WEIGHT_THREASHOLD)
+	if (abs(static_cast<int>(pattern.weight() - _weight_all)) > WEIGHT_THREASHOLD)
 	{
 		return false;
 	}
