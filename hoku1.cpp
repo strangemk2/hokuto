@@ -1,9 +1,13 @@
 #include <iostream>
 #include <cstdlib>
+#include <cstring>
+
+#include <dirent.h>
 
 #include "hoku1.hpp"
 
 void usage(char *);
+bool load_font_patterns(const string &, vector<font_pattern> &);
 
 int main(int argc, char *argv[])
 {
@@ -14,7 +18,13 @@ int main(int argc, char *argv[])
 	}
 
 	string pic_filename = argv[1];
-	string txt_filename = argv[2];
+	string font_dirname = argv[2];
+
+	vector<font_pattern> glyph_patterns;
+	if (!load_font_patterns(font_dirname, glyph_patterns))
+	{
+		return 1;
+	}
 
 	hoku_screenshot scr = hoku_screenshot(pic_filename);
 	if (!scr.init())
@@ -48,6 +58,51 @@ int main(int argc, char *argv[])
 void usage(char *program_name)
 {
 	cout << program_name << ": [pic] [txt]" << endl;
+}
+
+bool load_font_patterns(const string &pattern_folder, vector<font_pattern> &glyph_patterns)
+{
+	return true;
+
+	DIR *dp = nullptr;
+	dp = opendir(pattern_folder.c_str());
+	if (!dp)
+	{
+		return false;
+	}
+
+	struct dirent *dir = nullptr;
+	while ((dir = readdir(dp)))
+	{
+		if (strstr(dir->d_name, ".bmp") == (dir->d_name + 1))
+		{
+			picture *pic = picture::get_picture(dir->d_name);
+
+			font_pattern f(pic->width(), pic->height());
+			for (unsigned int y = 0; y < pic->height(); ++y)
+			{
+				for (unsigned int x = 0; x < pic->width(); ++x)
+				{
+					rgb c = pic->get_pixel(x, y);
+					if (is_glyph_black(c))
+					{
+						f.set_point(x, y);
+					}
+				}
+			}
+			f.set_charactor(dir->d_name[0]);
+			glyph_patterns.push_back(f);
+
+			delete (pic);
+		}
+		else
+		{
+			// warning
+		}
+	}
+	closedir(dp);
+
+	return true;
 }
 
 // class picture
@@ -436,51 +491,3 @@ glyph *hoku_screenshot::get_glyph()
 	return ret;
 }
 
-//coordinate hoku_screenshot::find_charactor()
-//{
-//	coordinate ret;
-//	for (unsigned int x = _current_charactor.x; x < _textarea->width(); ++x)
-//	{
-//		for (unsigned int y = _current_charactor.y; y < _textarea->height(); ++y)
-//		{
-//			rgb c;
-//			_textarea->get_pixel(x, y, c.r, c.g, c.b);
-//			if (is_yellow(c))
-//			{
-//				_current_charactor.x = x;
-//
-//				ret.x = x;
-//				ret.y = y;
-//				return ret;
-//			}
-//		}
-//	}
-//	return ret;
-//}
-//
-//void hoku_screenshot::proceed_characor()
-//{
-//	bool yellow_flag = false;
-//	for (unsigned int x = _current_charactor.x; x < _textarea->width(); ++x)
-//	{
-//		for (unsigned int y = 0; y < _textarea->height(); ++y)
-//		{
-//			rgb c;
-//			_textarea->get_pixel(x, y, c.r, c.g, c.b);
-//			if (is_yellow(c))
-//			{
-//				yellow_flag = true;
-//				break;
-//			}
-//		}
-//		if (yellow_flag)
-//		{
-//			yellow_flag = false;
-//		}
-//		else
-//		{
-//			_current_charactor.x = x;
-//			break;
-//		}
-//	}
-//}

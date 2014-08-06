@@ -127,15 +127,21 @@ class font_pattern : public glyph
 		unsigned char _ch = 0;
 
 	public:
+		font_pattern(unsigned int width, unsigned int height):
+			glyph(width, height)
+		{}
+
 		unsigned char charactor() const
 		{
 			return _ch;
 		}
+		void set_charactor(unsigned char ch)
+		{
+			_ch = ch;
+		}
 
 		bool match(const glyph &pattern);
 };
-
-vector<font_pattern> glyph_patterns;
 
 class hoku_screenshot
 {
@@ -156,9 +162,6 @@ class hoku_screenshot
 
 		bool init();
 		glyph *get_glyph();
-
-		//coordinate find_charactor();
-		//void proceed_characor();
 };
 
 static inline bool is_black(rgb c)
@@ -184,4 +187,9 @@ static inline bool is_backgroud_red(rgb c)
 static inline bool is_real_red(rgb c)
 {
 	return (c.r >= 250 && c.g == 0 && c.b == 0)?true:false;
+}
+
+static inline bool is_glyph_black(rgb c)
+{
+	return (c.r == 0 && c.g == 0 && c.b == 0)?true:false;
 }
