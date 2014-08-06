@@ -26,6 +26,16 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	// code for test load pattern
+	/*
+	for (auto pattern : glyph_patterns)
+	{
+		char file[20] = "ppp?.bmp";
+		file[3] = pattern.charactor();
+		pattern.save_bmp(file);
+	}
+	*/
+
 	hoku_screenshot scr = hoku_screenshot(pic_filename);
 	if (!scr.init())
 	{
@@ -62,7 +72,7 @@ void usage(char *program_name)
 
 bool load_font_patterns(const string &pattern_folder, vector<font_pattern> &glyph_patterns)
 {
-	return true;
+	//return true;
 
 	DIR *dp = nullptr;
 	dp = opendir(pattern_folder.c_str());
@@ -74,9 +84,10 @@ bool load_font_patterns(const string &pattern_folder, vector<font_pattern> &glyp
 	struct dirent *dir = nullptr;
 	while ((dir = readdir(dp)))
 	{
-		if (strstr(dir->d_name, ".bmp") == (dir->d_name + 1))
+		if (strstr(dir->d_name, ".bmp") == (dir->d_name + 5))
 		{
-			picture *pic = picture::get_picture(dir->d_name);
+			string font_filename = pattern_folder + dir->d_name;
+			picture *pic = picture::get_picture(font_filename);
 
 			font_pattern f(pic->width(), pic->height());
 			for (unsigned int y = 0; y < pic->height(); ++y)
@@ -90,7 +101,7 @@ bool load_font_patterns(const string &pattern_folder, vector<font_pattern> &glyp
 					}
 				}
 			}
-			f.set_charactor(dir->d_name[0]);
+			f.set_charactor(dir->d_name[4]);
 			glyph_patterns.push_back(f);
 
 			delete (pic);
@@ -284,12 +295,12 @@ bool font_pattern::match(const glyph &glyph)
 {
 	// check and generate _weight
 	/*
-	if (_weight_all == 0)
+	if (_weight == 0)
 	{
 		_calculate_weight();
 	}
 
-	if (abs(static_cast<int>(pattern.weight() - _weight_all)) > WEIGHT_THREASHOLD)
+	if (abs(static_cast<int>(pattern.weight() - _weight)) > WEIGHT_THREASHOLD)
 	{
 		return false;
 	}
