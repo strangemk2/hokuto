@@ -17,6 +17,19 @@ struct rgb
 	color b;
 };
 
+class point
+{
+	public:
+		float x = 0.0f;
+		float y = 0.0f;
+
+		point(float a, float b):
+			x(a),
+			y(b)
+		{}
+};
+typedef vector<point> point_set;
+
 class coordinate
 {
 	public:
@@ -87,12 +100,26 @@ class bmp : public picture
 		rgb get_pixel(unsigned int x, unsigned int y);
 };
 
+class matching
+{
+	private:
+		static constexpr float FLOAT_THREASHOLD = 0.1f;
+
+		static bool threashold_equal(float a, float b);
+
+		static inline float distance_2d(const point &a, const point &b)
+		{
+			return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+		}
+
+	public:
+		static float hausdorff_distance_2d(const point_set &a_set, const point_set &b_set);
+};
+
 class glyph
 {
 	private:
-		constexpr static unsigned int WEIGHT_THREASHOLD = 5;
-
-		unsigned int _weight;
+		unsigned int _weight = 0;
 
 		unsigned int _width;
 		unsigned int _height;
@@ -101,7 +128,7 @@ class glyph
 
 		void _calculate_weight();
 
-		unsigned char get_point(unsigned int x, unsigned int y);
+		unsigned char _get_point(unsigned int x, unsigned int y) const;
 
 	public:
 		glyph(unsigned int width, unsigned int height):
@@ -113,12 +140,16 @@ class glyph
 
 		operator bool() const
 		{
-			return _weight;
+			return get_weight();
 		}
 
 		void set_point(unsigned int x, unsigned int y);
+		unsigned int get_weight() const;
 
 		bool save_bmp(const string &filename);
+
+		void pirate_hash(double *) const;
+		void get_pointset(point_set &pset) const;
 };
 
 class font_pattern : public glyph
@@ -127,6 +158,8 @@ class font_pattern : public glyph
 		unsigned char _ch = 0;
 
 	public:
+		constexpr static int WEIGHT_THREASHOLD = 10;
+
 		font_pattern(unsigned int width, unsigned int height):
 			glyph(width, height)
 		{}
@@ -141,6 +174,7 @@ class font_pattern : public glyph
 		}
 
 		bool match(const glyph &pattern);
+		float hd(const glyph &glyph);
 };
 
 class hoku_screenshot

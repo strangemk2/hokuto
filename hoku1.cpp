@@ -1,4 +1,5 @@
 #include <iostream>
+#include <limits>
 #include <cstdlib>
 #include <cstring>
 
@@ -8,6 +9,7 @@
 
 void usage(char *);
 bool load_font_patterns(const string &, vector<font_pattern> &);
+char glyph_match(const vector<font_pattern> &, const glyph &);
 
 int main(int argc, char *argv[])
 {
@@ -42,21 +44,32 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	char bmp_filename[20] = "hokua.bmp";
+#ifdef OUTPUT
+	char bmp_filename[20] = "hokuaa.bmp";
+#endif
 	while (glyph *gly = scr.get_glyph())
 	{
+#ifndef OUTPUT
+		cout << glyph_match(glyph_patterns, *gly) << " ";
 		/*
 		for (auto pattern : glyph_patterns)
 		{
-			if (gly->match(pattern))
+			if (pattern.match(*gly))
 			{
 				cout << pattern.charactor();
 			}
 		}
 		cout << " ";
 		*/
+#else
 		gly->save_bmp(bmp_filename);
-		bmp_filename[4]++;
+		bmp_filename[5]++;
+		if (bmp_filename[5] == 'z')
+		{
+			bmp_filename[4]++;
+			bmp_filename[5] = 'a';
+		}
+#endif
 
 		delete (gly);
 	}
@@ -67,12 +80,14 @@ int main(int argc, char *argv[])
 
 void usage(char *program_name)
 {
-	cout << program_name << ": [pic] [txt]" << endl;
+	cout << program_name << ": [pic] [fonts]" << endl;
 }
 
 bool load_font_patterns(const string &pattern_folder, vector<font_pattern> &glyph_patterns)
 {
-	//return true;
+#ifdef OUTPUT
+	return true;
+#endif
 
 	DIR *dp = nullptr;
 	dp = opendir(pattern_folder.c_str());
@@ -114,6 +129,32 @@ bool load_font_patterns(const string &pattern_folder, vector<font_pattern> &glyp
 	closedir(dp);
 
 	return true;
+}
+
+char glyph_match(const vector<font_pattern> &glyph_patterns, const glyph &glyph)
+{
+	float hd = numeric_limits<float>::max();
+	char ch = 0;
+	for (auto pattern : glyph_patterns)
+	{
+		if (abs(static_cast<int>(glyph.get_weight() - pattern.get_weight())) > font_pattern::WEIGHT_THREASHOLD)
+		{
+			continue;
+		}
+
+		point_set font_set;
+		pattern.get_pointset(font_set);
+		point_set glyph_set;
+		glyph.get_pointset(glyph_set);
+
+		float d = matching::hausdorff_distance_2d(font_set, glyph_set);
+		if (d < hd)
+		{
+			hd = d;
+			ch = pattern.charactor();
+		}
+	}
+	return ch;
 }
 
 // class picture
@@ -198,7 +239,7 @@ bool png::init(const string filename)
 
 	int color_type = png_get_color_type(_png_ptr, _info_ptr);
 	int bit_depth = png_get_bit_depth(_png_ptr, _info_ptr);
-	if (color_type != 2 || bit_depth != 24)
+	if (color_type != 2 || bit_depth != 8)
 		return false;
 
 	_row_pointers = png_get_rows(_png_ptr, _info_ptr);
@@ -251,6 +292,49 @@ rgb bmp::get_pixel(unsigned int x, unsigned int y)
 	return ret;
 }
 
+// matching
+bool matching::threashold_equal(float a, float b)
+{
+	if (abs(a - b) < FLOAT_THREASHOLD)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+// hausdorff distance and matching point percentage optimize
+float matching::hausdorff_distance_2d(const point_set &a_set, const point_set &b_set)
+{
+	float hausdorff_distance = 0.0f;
+	float match = 0.0f;
+	for (auto a : a_set)
+	{
+		float min_distance = numeric_limits<float>::max();
+		for (auto b : b_set)
+		{
+			float d = distance_2d(a, b);
+			if (min_distance > d)
+			{
+				min_distance = d;
+			}
+
+		}
+		if (threashold_equal(min_distance, 0.0f))
+		{
+			match += 1.0f;
+		}
+		if (min_distance > hausdorff_distance)
+		{
+			hausdorff_distance = min_distance;
+		}
+	}
+	return hausdorff_distance * b_set.size() / match;
+	//return hausdorff_distance;
+}
+
 // glyph
 void glyph::_calculate_weight()
 {
@@ -260,7 +344,7 @@ void glyph::_calculate_weight()
 	}
 }
 
-unsigned char glyph::get_point(unsigned int x, unsigned int y)
+unsigned char glyph::_get_point(unsigned int x, unsigned int y) const
 {
 	return _data[y * _width + x];
 }
@@ -268,6 +352,12 @@ unsigned char glyph::get_point(unsigned int x, unsigned int y)
 void glyph::set_point(unsigned int x, unsigned int y)
 {
 	_data[y * _width + x] = 1;
+	_weight++;
+}
+
+unsigned int glyph::get_weight() const
+{
+	return _weight;
 }
 
 bool glyph::save_bmp(const string &filename)
@@ -279,7 +369,7 @@ bool glyph::save_bmp(const string &filename)
 	{
 		for (unsigned int y = 0; y < _height; ++y)
 		{
-			if (get_point(x, y))
+			if (_get_point(x, y))
 			{
 				img.set_pixel(x, y, 0x0, 0x0, 0x0);
 			}
@@ -290,25 +380,72 @@ bool glyph::save_bmp(const string &filename)
 	return true;
 }
 
+void glyph::pirate_hash(double *hash) const
+{
+	unsigned int center_x = _width / 2;
+	unsigned int center_y = _height / 2;
+
+	for (unsigned int x = 0; x < _width; ++x)
+	{
+		for (unsigned int y = 0; y < _height; ++y)
+		{
+			if (_get_point(x, y))
+			{
+				hash[0] += sqrt((center_x - x) * (center_x - x) + (center_y - y) * (center_y - y));
+				hash[1] += sqrt((0 - x) * (0 - x) + (0 - y) * (0 - y));
+				hash[2] += sqrt((0 - x) * (0 - x) + (_height - y) * (_height - y));
+				hash[3] += sqrt((_width - x) * (_width - x) + (0 - y) * (0 - y));
+				hash[4] += sqrt((_width - x) * (_height - x) + (_width - y) * (_height - y));
+			}
+		}
+	}
+	hash[0] /= (_width * _height);
+	hash[1] /= (_width * _height);
+	hash[2] /= (_width * _height);
+	hash[3] /= (_width * _height);
+	hash[4] /= (_width * _height);
+}
+
+void glyph::get_pointset(point_set &pset) const
+{
+	for (unsigned int x = 0; x < _width; ++x)
+	{
+		for (unsigned int y = 0; y < _height; ++y)
+		{
+			if (_get_point(x, y))
+			{
+				point p(x, y);
+				pset.push_back(p);
+			}
+		}
+	}
+}
+
 // font_pattern
 bool font_pattern::match(const glyph &glyph)
 {
-	// check and generate _weight
-	/*
-	if (_weight == 0)
-	{
-		_calculate_weight();
-	}
-
-	if (abs(static_cast<int>(pattern.weight() - _weight)) > WEIGHT_THREASHOLD)
+	// compare weight first
+	if (abs(static_cast<int>(glyph.get_weight() - this->get_weight())) > WEIGHT_THREASHOLD)
 	{
 		return false;
 	}
-	*/
+
+	double h1[5] = {0.0};
+	double h2[5] = {0.0};
+	this->pirate_hash(h1);
+	glyph.pirate_hash(h2);
+	double r = 0.0f;
+	for (int i = 0; i < 5; ++i)
+	{
+		r += abs(h1[i] - h2[i]);
+	}
+	if (r > 0.5f)
+	{
+		return false;
+	}
 
 	return true;
 }
-
 
 // class hoku_screenshot
 hoku_screenshot::~hoku_screenshot()
@@ -501,4 +638,3 @@ glyph *hoku_screenshot::get_glyph()
 
 	return ret;
 }
-
