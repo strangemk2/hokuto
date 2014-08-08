@@ -51,16 +51,6 @@ int main(int argc, char *argv[])
 	{
 #ifndef OUTPUT
 		cout << glyph_match(glyph_patterns, *gly) << " ";
-		/*
-		for (auto pattern : glyph_patterns)
-		{
-			if (pattern.match(*gly))
-			{
-				cout << pattern.charactor();
-			}
-		}
-		cout << " ";
-		*/
 #else
 		gly->save_bmp(bmp_filename);
 		bmp_filename[5]++;
@@ -419,32 +409,6 @@ void glyph::get_pointset(point_set &pset) const
 			}
 		}
 	}
-}
-
-// font_pattern
-bool font_pattern::match(const glyph &glyph)
-{
-	// compare weight first
-	if (abs(static_cast<int>(glyph.get_weight() - this->get_weight())) > WEIGHT_THREASHOLD)
-	{
-		return false;
-	}
-
-	double h1[5] = {0.0};
-	double h2[5] = {0.0};
-	this->pirate_hash(h1);
-	glyph.pirate_hash(h2);
-	double r = 0.0f;
-	for (int i = 0; i < 5; ++i)
-	{
-		r += abs(h1[i] - h2[i]);
-	}
-	if (r > 0.5f)
-	{
-		return false;
-	}
-
-	return true;
 }
 
 // class hoku_screenshot

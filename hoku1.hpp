@@ -172,9 +172,6 @@ class font_pattern : public glyph
 		{
 			_ch = ch;
 		}
-
-		bool match(const glyph &pattern);
-		float hd(const glyph &glyph);
 };
 
 class hoku_screenshot
