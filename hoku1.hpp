@@ -158,7 +158,6 @@ class glyph
 
 		bool save_bmp(const string &filename);
 
-		void pirate_hash(double *) const;
 		void get_pointset(point_set &pset) const;
 };
 

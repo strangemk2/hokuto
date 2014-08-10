@@ -414,32 +414,6 @@ bool glyph::save_bmp(const string &filename)
 	return true;
 }
 
-void glyph::pirate_hash(double *hash) const
-{
-	unsigned int center_x = _width / 2;
-	unsigned int center_y = _height / 2;
-
-	for (unsigned int x = 0; x < _width; ++x)
-	{
-		for (unsigned int y = 0; y < _height; ++y)
-		{
-			if (_get_point(x, y))
-			{
-				hash[0] += sqrt((center_x - x) * (center_x - x) + (center_y - y) * (center_y - y));
-				hash[1] += sqrt((0 - x) * (0 - x) + (0 - y) * (0 - y));
-				hash[2] += sqrt((0 - x) * (0 - x) + (_height - y) * (_height - y));
-				hash[3] += sqrt((_width - x) * (_width - x) + (0 - y) * (0 - y));
-				hash[4] += sqrt((_width - x) * (_height - x) + (_width - y) * (_height - y));
-			}
-		}
-	}
-	hash[0] /= (_width * _height);
-	hash[1] /= (_width * _height);
-	hash[2] /= (_width * _height);
-	hash[3] /= (_width * _height);
-	hash[4] /= (_width * _height);
-}
-
 void glyph::get_pointset(point_set &pset) const
 {
 	for (unsigned int x = 0; x < _width; ++x)
