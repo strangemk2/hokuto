@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 	while (glyph *gly = scr.get_glyph())
 	{
 #ifndef OUTPUT
-		cout << glyph_match(glyph_patterns, *gly) << " ";
+		cout << glyph_match(glyph_patterns, *gly);
 #else
 		gly->save_bmp(bmp_filename);
 		bmp_filename[5]++;
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 
 		delete (gly);
 	}
-	cout << endl;
+	//cout << endl;
 
 	return 0;
 }
@@ -127,15 +127,34 @@ char glyph_match(const vector<font_pattern> &glyph_patterns, const glyph &glyph)
 	char ch = 0;
 	for (auto pattern : glyph_patterns)
 	{
-		if (abs(static_cast<int>(glyph.get_weight() - pattern.get_weight())) > font_pattern::WEIGHT_THREASHOLD)
-		{
-			continue;
-		}
-
 		point_set font_set;
 		pattern.get_pointset(font_set);
 		point_set glyph_set;
 		glyph.get_pointset(glyph_set);
+
+		// special patch for fonts ", ."
+		auto s = glyph_set.size();
+		if (s == 1)
+		{
+			ch = '!';
+			return ch;
+		}
+		else if (s < 6)
+		{
+			ch = '.';
+			return ch;
+		}
+		else if(s < 9 && 6 <= s)
+		{
+			ch = ',';
+			return ch;
+		}
+		// end patch
+
+		if (abs(static_cast<int>(glyph.get_weight() - pattern.get_weight())) > font_pattern::WEIGHT_THREASHOLD)
+		{
+			continue;
+		}
 
 		float d = matching::hausdorff_distance_2d(font_set, glyph_set);
 		if (d < hd)
@@ -587,12 +606,27 @@ glyph *hoku_screenshot::get_glyph()
 
 	glyph *ret = new glyph(right - left, down - up);
 
+	// special patch for fonts "!"
+	if (((right - left) == 2 || (right - left) == 3) && (down - up) == 10)
+	{
+		rgb c;
+		_textarea->get_pixel(left+1, down-2, c.r, c.g, c.b);
+
+		if (c.r < 190 || c.g < 190 || c.b > 30)
+		{
+			ret->set_point(0, 0);
+			return ret;
+		}
+	}
+	// end patch
+
 	for (unsigned int x = left; x < right; ++x)
 	{
 		for (unsigned int y = up; y < down; ++y)
 		{
 			rgb c;
 			_textarea->get_pixel(x, y, c.r, c.g, c.b);
+
 			if (is_yellow(c))
 			{
 				ret->set_point(x - left, y - up);
