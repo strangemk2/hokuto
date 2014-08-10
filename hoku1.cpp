@@ -2,6 +2,7 @@
 #include <limits>
 #include <cstdlib>
 #include <cstring>
+#include <algorithm>
 
 #include <dirent.h>
 
@@ -10,6 +11,8 @@
 void usage(char *);
 bool load_font_patterns(const string &, vector<font_pattern> &);
 char glyph_match(const vector<font_pattern> &, const glyph &);
+
+matching matching::_instance;
 
 int main(int argc, char *argv[])
 {
@@ -156,7 +159,7 @@ char glyph_match(const vector<font_pattern> &glyph_patterns, const glyph &glyph)
 			continue;
 		}
 
-		float d = matching::hausdorff_distance_2d(font_set, glyph_set);
+		float d = matching::instance()->hausdorff_distance_2d(font_set, glyph_set);
 		if (d < hd)
 		{
 			hd = d;
@@ -302,6 +305,18 @@ rgb bmp::get_pixel(unsigned int x, unsigned int y)
 }
 
 // matching
+matching::matching()
+{
+	_distance_cache = new float[MAX_DIMENSION][MAX_DIMENSION][MAX_DIMENSION][MAX_DIMENSION];
+	char *t = reinterpret_cast<char *>(_distance_cache);
+	fill_n(t, MAX_DIMENSION*MAX_DIMENSION*MAX_DIMENSION*MAX_DIMENSION*sizeof(float), 0);
+}
+
+matching::~matching()
+{
+	delete [](_distance_cache);
+}
+
 bool matching::threashold_equal(float a, float b)
 {
 	if (abs(a - b) < FLOAT_THREASHOLD)
@@ -312,6 +327,16 @@ bool matching::threashold_equal(float a, float b)
 	{
 		return false;
 	}
+}
+
+float matching::distance_2d(const point &a, const point &b)
+{
+	if (_distance_cache[a.x][a.y][b.x][b.y] == 0.0f)
+	{
+		 _distance_cache[a.x][a.y][b.x][b.y] =
+			 sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+	}
+	return _distance_cache[a.x][a.y][b.x][b.y];
 }
 
 // hausdorff distance and matching point percentage optimize
