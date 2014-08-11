@@ -135,6 +135,7 @@ char glyph_match(const vector<font_pattern> &glyph_patterns, const glyph &glyph)
 		point_set glyph_set;
 		glyph.get_pointset(glyph_set);
 
+#ifdef SPECIAL_PATCH
 		// special patch for fonts ", ."
 		auto s = glyph_set.size();
 		if (s == 1)
@@ -153,6 +154,7 @@ char glyph_match(const vector<font_pattern> &glyph_patterns, const glyph &glyph)
 			return ch;
 		}
 		// end patch
+#endif
 
 		if (abs(static_cast<int>(glyph.get_weight() - pattern.get_weight())) > font_pattern::WEIGHT_THREASHOLD)
 		{
@@ -605,6 +607,7 @@ glyph *hoku_screenshot::get_glyph()
 
 	glyph *ret = new glyph(right - left, down - up);
 
+#ifdef SPECIAL_PATCH
 	// special patch for fonts "!"
 	if (((right - left) == 2 || (right - left) == 3) && (down - up) == 10)
 	{
@@ -618,6 +621,7 @@ glyph *hoku_screenshot::get_glyph()
 		}
 	}
 	// end patch
+#endif
 
 	for (unsigned int x = left; x < right; ++x)
 	{
