@@ -8,10 +8,10 @@
 class glyph
 {
 	private:
-		unsigned int _weight = 0;
-
 		unsigned int _width;
 		unsigned int _height;
+
+		unsigned int _weight = 0;
 
 		vector<unsigned char> _data;
 
@@ -27,6 +27,13 @@ class glyph
 			_data.resize(width * height);
 		}
 
+		glyph(unsigned int width, unsigned int height, unsigned int weight, vector<unsigned char> data):
+			_width(width),
+			_height(height),
+			_weight(weight),
+			_data(data)
+		{}
+
 		operator bool() const
 		{
 			return get_weight();
@@ -38,6 +45,8 @@ class glyph
 		bool save_bmp(const string &filename);
 
 		void get_pointset(point_set &pset) const;
+
+		string dump_header();
 };
 
 class font_pattern : public glyph
@@ -52,6 +61,12 @@ class font_pattern : public glyph
 			glyph(width, height)
 		{}
 
+		font_pattern(unsigned char ch,
+				unsigned int width, unsigned int height, unsigned int weight, vector<unsigned char> data):
+			glyph(width, height, weight, data),
+			_ch(ch)
+		{}
+
 		unsigned char charactor() const
 		{
 			return _ch;
@@ -60,4 +75,8 @@ class font_pattern : public glyph
 		{
 			_ch = ch;
 		}
+		string dump_header();
 };
+
+bool load_font_patterns(const string &, vector<font_pattern> &);
+string dump_font_patterns(vector<font_pattern> &);

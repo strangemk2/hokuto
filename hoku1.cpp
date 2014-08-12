@@ -1,13 +1,9 @@
 #include <iostream>
 #include <limits>
-#include <cstring>
-
-#include <dirent.h>
 
 #include "hoku1.hpp"
 
 void usage(char *);
-bool load_font_patterns(const string &, vector<font_pattern> &);
 char glyph_match(const vector<font_pattern> &, const glyph &);
 
 matching matching::_instance;
@@ -59,50 +55,6 @@ int main(int argc, char *argv[])
 void usage(char *program_name)
 {
 	cout << program_name << ": [pic] [fonts]" << endl;
-}
-
-bool load_font_patterns(const string &pattern_folder, vector<font_pattern> &glyph_patterns)
-{
-	DIR *dp = nullptr;
-	dp = opendir(pattern_folder.c_str());
-	if (!dp)
-	{
-		return false;
-	}
-
-	struct dirent *dir = nullptr;
-	while ((dir = readdir(dp)))
-	{
-		if (strstr(dir->d_name, ".bmp") == (dir->d_name + 5))
-		{
-			string font_filename = pattern_folder + dir->d_name;
-			picture *pic = picture::get_picture(font_filename);
-
-			font_pattern f(pic->width(), pic->height());
-			for (unsigned int y = 0; y < pic->height(); ++y)
-			{
-				for (unsigned int x = 0; x < pic->width(); ++x)
-				{
-					rgb c = pic->get_pixel(x, y);
-					if (is_glyph_black(c))
-					{
-						f.set_point(x, y);
-					}
-				}
-			}
-			f.set_charactor(dir->d_name[4]);
-			glyph_patterns.push_back(f);
-
-			delete (pic);
-		}
-		else
-		{
-			// warning
-		}
-	}
-	closedir(dp);
-
-	return true;
 }
 
 char glyph_match(const vector<font_pattern> &glyph_patterns, const glyph &glyph)
