@@ -101,5 +101,24 @@ char glyph_match(const vector<font_pattern> &glyph_patterns, const glyph &glyph)
 			ch = pattern.charactor();
 		}
 	}
+	// special patch for fonts "8 B"
+	if (ch == '8')
+	{
+		point_set glyph_set;
+		glyph.get_pointset(glyph_set);
+		unsigned int maxy = 0;
+		for (auto p1 : glyph_set)
+		{
+			if (maxy < p1.y) maxy = p1.y;
+		}
+		for (auto p2 : glyph_set)
+		{
+			if (p2.x == 0 && p2.y == maxy)
+			{
+				ch = 'b';
+			}
+		}
+	}
+	// end patch
 	return ch;
 }
