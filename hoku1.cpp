@@ -120,5 +120,12 @@ char glyph_match(const vector<font_pattern> &glyph_patterns, const glyph &glyph)
 		}
 	}
 	// end patch
+	// special patch for fonts "|"
+	// as filename couldn't contain "/", use "|" instead
+	if (ch == '|')
+	{
+		ch = '/';
+	}
+	// end patch
 	return ch;
 }
