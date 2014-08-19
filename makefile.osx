@@ -13,7 +13,7 @@ hoku_picture.o : hoku_picture.hpp hoku_picture.cpp hoku_common.hpp
 hoku_matching.o : hoku_matching.hpp hoku_matching.cpp hoku_common.hpp
 	clang++ -Ilib/include/libpng16 hoku_matching.cpp -std=c++11 -Wall -O2 -march=native -c -DSPECIAL_PATCH
 
-hoku_font.o : hoku_font.hpp hoku_font.cpp hoku_common.hpp
+hoku_font.o : hoku_font.hpp hoku_font.cpp hoku_common.hpp hoku_font_data.hpp
 	clang++ -Ilib/include/libpng16 hoku_font.cpp -std=c++11 -Wall -O2 -march=native -c -DSPECIAL_PATCH -DPREDEFINED_FONT_DATA
 
 hoku_screenshot.o : hoku_screenshot.hpp hoku_screenshot.cpp hoku_common.hpp
